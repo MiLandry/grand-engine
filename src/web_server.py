@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-Economic Management Game Prototype
-A roguelite economic management game with card-based actions.
+Grand Engine Web Server
+A simple Flask server to serve the economic management game.
 """
 
-import webbrowser
-import tempfile
+from flask import Flask, render_template_string, send_from_directory
 import os
+import tempfile
+import webbrowser
 from pathlib import Path
 
-def create_game_html():
-    """Create the HTML file for the economic game."""
-    html_content = """<!DOCTYPE html>
+app = Flask(__name__)
+
+# Game HTML template
+GAME_HTML = """<!DOCTYPE html>
 <html>
 <head>
-    <title>Factory Empire - Economic Management Game</title>
+    <title>Grand Engine - Economic Management Game</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -187,7 +189,7 @@ def create_game_html():
 <body>
     <div class="game-container">
         <div class="header">
-            <h1>🏭 Factory Empire</h1>
+            <h1>⚙️ Grand Engine</h1>
         </div>
         
         <div class="resources">
@@ -196,16 +198,24 @@ def create_game_html():
                 <div class="resource-value" id="money">100</div>
             </div>
             <div class="resource">
-                <div>📦 Materials</div>
-                <div class="resource-value" id="materials">0</div>
+                <div>💧 Water</div>
+                <div class="resource-value" id="water">0</div>
             </div>
             <div class="resource">
-                <div>🏭 Goods</div>
-                <div class="resource-value" id="goods">0</div>
+                <div>🌫️ Steam</div>
+                <div class="resource-value" id="steam">0</div>
             </div>
             <div class="resource">
-                <div>👥 Workers</div>
-                <div class="resource-value" id="workers">2</div>
+                <div>⚡ Energy</div>
+                <div class="resource-value" id="energy">0</div>
+            </div>
+            <div class="resource">
+                <div>⛏️ Ore</div>
+                <div class="resource-value" id="ore">0</div>
+            </div>
+            <div class="resource">
+                <div>💎 Crystals</div>
+                <div class="resource-value" id="crystals">0</div>
             </div>
         </div>
         
@@ -221,7 +231,7 @@ def create_game_html():
         </div>
         
         <div class="log" id="log">
-            <div class="log-entry">Welcome to Factory Empire! Manage your resources wisely.</div>
+            <div class="log-entry">Welcome to Grand Engine! Build your economic empire.</div>
         </div>
     </div>
     
@@ -230,9 +240,11 @@ def create_game_html():
             constructor() {
                 this.resources = {
                     money: 100,
-                    materials: 0,
-                    goods: 0,
-                    workers: 2
+                    water: 0,
+                    steam: 0,
+                    energy: 0,
+                    ore: 0,
+                    crystals: 0
                 };
                 
                 this.turn = 1;
@@ -241,57 +253,86 @@ def create_game_html():
                 this.discard = [];
                 
                 this.cardDefinitions = {
-                    buyMaterials: {
-                        title: "Buy Materials",
-                        cost: 20,
-                        effect: "Gain 3 materials",
+                    extractWater: {
+                        title: "Extract Water",
+                        cost: 10,
+                        effect: "Gain 3 water",
                         action: () => {
-                            if (this.resources.money >= 20) {
-                                this.resources.money -= 20;
-                                this.resources.materials += 3;
-                                this.log("Bought materials for $20");
+                            if (this.resources.money >= 10) {
+                                this.resources.money -= 10;
+                                this.resources.water += 3;
+                                this.log("Extracted 3 water for $10");
                                 return true;
                             }
                             return false;
                         }
                     },
-                    produceGoods: {
-                        title: "Produce Goods",
+                    boilWater: {
+                        title: "Boil Water",
                         cost: 0,
-                        effect: "Convert 2 materials to 1 good",
+                        effect: "Convert 2 water to 1 steam",
                         action: () => {
-                            if (this.resources.materials >= 2) {
-                                this.resources.materials -= 2;
-                                this.resources.goods += 1;
-                                this.log("Produced 1 good from 2 materials");
+                            if (this.resources.water >= 2) {
+                                this.resources.water -= 2;
+                                this.resources.steam += 1;
+                                this.log("Boiled 2 water into 1 steam");
                                 return true;
                             }
                             return false;
                         }
                     },
-                    sellGoods: {
-                        title: "Sell Goods",
+                    generateEnergy: {
+                        title: "Generate Energy",
                         cost: 0,
-                        effect: "Sell 1 good for $30",
+                        effect: "Convert 1 steam to 2 energy",
                         action: () => {
-                            if (this.resources.goods >= 1) {
-                                this.resources.goods -= 1;
-                                this.resources.money += 30;
-                                this.log("Sold 1 good for $30");
+                            if (this.resources.steam >= 1) {
+                                this.resources.steam -= 1;
+                                this.resources.energy += 2;
+                                this.log("Generated 2 energy from 1 steam");
                                 return true;
                             }
                             return false;
                         }
                     },
-                    hireWorker: {
-                        title: "Hire Worker",
-                        cost: 50,
-                        effect: "Gain 1 worker",
+                    mineOre: {
+                        title: "Mine Ore",
+                        cost: 15,
+                        effect: "Gain 2 ore",
                         action: () => {
-                            if (this.resources.money >= 50) {
-                                this.resources.money -= 50;
-                                this.resources.workers += 1;
-                                this.log("Hired a new worker for $50");
+                            if (this.resources.money >= 15) {
+                                this.resources.money -= 15;
+                                this.resources.ore += 2;
+                                this.log("Mined 2 ore for $15");
+                                return true;
+                            }
+                            return false;
+                        }
+                    },
+                    refineCrystals: {
+                        title: "Refine Crystals",
+                        cost: 0,
+                        effect: "Convert 1 ore + 1 energy to 1 crystal",
+                        action: () => {
+                            if (this.resources.ore >= 1 && this.resources.energy >= 1) {
+                                this.resources.ore -= 1;
+                                this.resources.energy -= 1;
+                                this.resources.crystals += 1;
+                                this.log("Refined 1 crystal from 1 ore + 1 energy");
+                                return true;
+                            }
+                            return false;
+                        }
+                    },
+                    sellCrystals: {
+                        title: "Sell Crystals",
+                        cost: 0,
+                        effect: "Sell 1 crystal for $40",
+                        action: () => {
+                            if (this.resources.crystals >= 1) {
+                                this.resources.crystals -= 1;
+                                this.resources.money += 40;
+                                this.log("Sold 1 crystal for $40");
                                 return true;
                             }
                             return false;
@@ -317,10 +358,12 @@ def create_game_html():
             initializeDeck() {
                 this.deck = [];
                 // Add cards to deck
-                for (let i = 0; i < 3; i++) this.deck.push('buyMaterials');
-                for (let i = 0; i < 3; i++) this.deck.push('produceGoods');
-                for (let i = 0; i < 3; i++) this.deck.push('sellGoods');
-                for (let i = 0; i < 2; i++) this.deck.push('hireWorker');
+                for (let i = 0; i < 3; i++) this.deck.push('extractWater');
+                for (let i = 0; i < 3; i++) this.deck.push('boilWater');
+                for (let i = 0; i < 3; i++) this.deck.push('generateEnergy');
+                for (let i = 0; i < 2; i++) this.deck.push('mineOre');
+                for (let i = 0; i < 2; i++) this.deck.push('refineCrystals');
+                for (let i = 0; i < 2; i++) this.deck.push('sellCrystals');
                 for (let i = 0; i < 2; i++) this.deck.push('refresh');
                 
                 this.shuffleDeck();
@@ -393,7 +436,7 @@ def create_game_html():
                 winScreen.innerHTML = `
                     <div class="content">
                         <h2>🎉 Victory!</h2>
-                        <p>You've built a successful factory empire!</p>
+                        <p>You've built a successful economic engine!</p>
                         <p>Final Money: $${this.resources.money}</p>
                         <button class="btn" onclick="location.reload()">Play Again</button>
                     </div>
@@ -407,7 +450,7 @@ def create_game_html():
                 loseScreen.innerHTML = `
                     <div class="content">
                         <h2>💸 Bankruptcy!</h2>
-                        <p>Your factory empire has failed.</p>
+                        <p>Your economic engine has failed.</p>
                         <button class="btn" onclick="location.reload()">Try Again</button>
                     </div>
                 `;
@@ -426,9 +469,11 @@ def create_game_html():
             updateDisplay() {
                 // Update resources
                 document.getElementById('money').textContent = this.resources.money;
-                document.getElementById('materials').textContent = this.resources.materials;
-                document.getElementById('goods').textContent = this.resources.goods;
-                document.getElementById('workers').textContent = this.resources.workers;
+                document.getElementById('water').textContent = this.resources.water;
+                document.getElementById('steam').textContent = this.resources.steam;
+                document.getElementById('energy').textContent = this.resources.energy;
+                document.getElementById('ore').textContent = this.resources.ore;
+                document.getElementById('crystals').textContent = this.resources.crystals;
                 
                 // Update turn info
                 document.getElementById('turn').textContent = this.turn;
@@ -468,14 +513,18 @@ def create_game_html():
                 const card = this.cardDefinitions[cardId];
                 
                 switch(cardId) {
-                    case 'buyMaterials':
-                        return this.resources.money >= 20;
-                    case 'produceGoods':
-                        return this.resources.materials >= 2;
-                    case 'sellGoods':
-                        return this.resources.goods >= 1;
-                    case 'hireWorker':
-                        return this.resources.money >= 50;
+                    case 'extractWater':
+                        return this.resources.money >= 10;
+                    case 'boilWater':
+                        return this.resources.water >= 2;
+                    case 'generateEnergy':
+                        return this.resources.steam >= 1;
+                    case 'mineOre':
+                        return this.resources.money >= 15;
+                    case 'refineCrystals':
+                        return this.resources.ore >= 1 && this.resources.energy >= 1;
+                    case 'sellCrystals':
+                        return this.resources.crystals >= 1;
                     case 'refresh':
                         return true;
                     default:
@@ -489,30 +538,35 @@ def create_game_html():
     </script>
 </body>
 </html>"""
-    
-    return html_content
 
-def run_game():
-    """Run the economic game in the default web browser."""
-    html_content = create_game_html()
-    
-    # Create a temporary HTML file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
-        f.write(html_content)
-        temp_file = f.name
-    
-    # Open in browser
-    webbrowser.open(f'file://{temp_file}')
-    
-    print("🎮 Factory Empire game opened in your browser!")
+@app.route('/')
+def game():
+    """Serve the Grand Engine game."""
+    return GAME_HTML
+
+@app.route('/health')
+def health():
+    """Health check endpoint."""
+    return {'status': 'healthy', 'game': 'Grand Engine'}
+
+def run_server(host='127.0.0.1', port=5000, debug=True):
+    """Run the Flask server."""
+    print(f"🎮 Starting Grand Engine server at http://{host}:{port}")
     print("📖 How to play:")
-    print("   • Buy Materials ($20) → Gain 3 materials")
-    print("   • Produce Goods (Free) → Convert 2 materials to 1 good")
-    print("   • Sell Goods (Free) → Sell 1 good for $30")
-    print("   • Hire Worker ($50) → Gain 1 worker")
+    print("   • Extract Water ($10) → Gain 3 water")
+    print("   • Boil Water (Free) → Convert 2 water to 1 steam")
+    print("   • Generate Energy (Free) → Convert 1 steam to 2 energy")
+    print("   • Mine Ore ($15) → Gain 2 ore")
+    print("   • Refine Crystals (Free) → Convert 1 ore + 1 energy to 1 crystal")
+    print("   • Sell Crystals (Free) → Sell 1 crystal for $40")
     print("   • Refresh (Free) → Redraw your hand")
     print("\n🎯 Goal: Reach $300 to win!")
-    print("💡 Strategy: Buy → Produce → Sell → Repeat!")
+    print("💡 Strategy: Extract → Boil → Generate → Mine → Refine → Sell!")
+    
+    # Open browser automatically
+    webbrowser.open(f'http://{host}:{port}')
+    
+    app.run(host=host, port=port, debug=debug)
 
-if __name__ == "__main__":
-    run_game() 
+if __name__ == '__main__':
+    run_server() 
