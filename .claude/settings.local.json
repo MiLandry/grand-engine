@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(pip install:*)",
+      "Bash(python3 -m pip install:*)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(brew install:*)",
+      "Bash(python:*)",
+      "Bash(jupyter notebook:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,6 @@
+pygame
+numpy
+jupyter
+ipykernel
+matplotlib
+pillow
