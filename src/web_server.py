@@ -338,13 +338,14 @@ GAME_HTML = """<!DOCTYPE html>
                             return false;
                         }
                     },
-                    refresh: {
-                        title: "Refresh",
+                    activateEngine: {
+                        title: "Activate Core Engine",
                         cost: 0,
-                        effect: "Redraw your hand",
+                        effect: "Redraw hand + gain 1 energy",
                         action: () => {
                             this.refreshHand();
-                            this.log("Refreshed your hand");
+                            this.resources.energy += 1;
+                            this.log("Core engine activated! Redrew hand and gained 1 energy");
                             return true;
                         }
                     }
@@ -364,7 +365,7 @@ GAME_HTML = """<!DOCTYPE html>
                 for (let i = 0; i < 2; i++) this.deck.push('mineOre');
                 for (let i = 0; i < 2; i++) this.deck.push('refineCrystals');
                 for (let i = 0; i < 2; i++) this.deck.push('sellCrystals');
-                for (let i = 0; i < 2; i++) this.deck.push('refresh');
+                for (let i = 0; i < 2; i++) this.deck.push('activateEngine');
                 
                 this.shuffleDeck();
             }
@@ -525,7 +526,7 @@ GAME_HTML = """<!DOCTYPE html>
                         return this.resources.ore >= 1 && this.resources.energy >= 1;
                     case 'sellCrystals':
                         return this.resources.crystals >= 1;
-                    case 'refresh':
+                    case 'activateEngine':
                         return true;
                     default:
                         return true;
@@ -559,7 +560,7 @@ def run_server(host='127.0.0.1', port=5000, debug=True):
     print("   • Mine Ore ($15) → Gain 2 ore")
     print("   • Refine Crystals (Free) → Convert 1 ore + 1 energy to 1 crystal")
     print("   • Sell Crystals (Free) → Sell 1 crystal for $40")
-    print("   • Refresh (Free) → Redraw your hand")
+    print("   • Activate Core Engine (Free) → Redraw hand + gain 1 energy")
     print("\n🎯 Goal: Reach $300 to win!")
     print("💡 Strategy: Extract → Boil → Generate → Mine → Refine → Sell!")
     
