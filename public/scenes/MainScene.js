@@ -47,8 +47,8 @@ export class MainScene extends Phaser.Scene {
     }
 
     dealHand() {
-        // Always draw all unique cards, shuffled
-        this.hand = Phaser.Utils.Array.Shuffle([...CARD_TYPES]);
+        // Always draw all unique cards in original order (no shuffle)
+        this.hand = [...CARD_TYPES];
     }
 
     renderHand() {
