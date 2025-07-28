@@ -8,10 +8,11 @@ export const CARD_TYPES = [
     { name: "Run Core Engine", color: 0xFFD700 }
 ];
 
-// Handles the effect of playing a card. Returns {played, message}
+// Handles the effect of playing a card. Returns {played, message, removeFromHand}
 export function playCardEffect(card, resources, dealHandCallback) {
     let played = false;
     let message = `Played: ${card.name}`;
+    let removeFromHand = true; // New flag
 
     switch (card.name) {
         case "Extract Water":
@@ -54,15 +55,17 @@ export function playCardEffect(card, resources, dealHandCallback) {
             }
             break;
         case "Run Core Engine":
-            dealHandCallback();
+            // Reset to full hand - all 7 cards restored
+            dealHandCallback(); 
             resources.energy += 1;
-            message = "Core Engine activated! New hand +1 ⚡";
+            message = "Core Engine activated! Full hand restored +1 ⚡";
             played = true;
+            removeFromHand = false; // Don't remove Core Engine
             break;
     }
 
     if (!played) {
         message = `Can't play: ${card.name}`;
     }
-    return { played, message };
+    return { played, message, removeFromHand };
 }

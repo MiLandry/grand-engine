@@ -78,14 +78,16 @@ export class MainScene extends Phaser.Scene {
 
     playCard(cardIndex) {
         const card = this.hand[cardIndex];
-        const { played, message } = playCardEffect(
+        const { played, message, removeFromHand = true } = playCardEffect(
             card,
             this.resources,
             () => this.dealHand()
         );
         this.messageText.setText(message);
         if (played) {
-            this.hand.splice(cardIndex, 1);
+            if (removeFromHand) {
+                this.hand.splice(cardIndex, 1);
+            }
             this.updateResourceText();
             this.renderHand();
         }
