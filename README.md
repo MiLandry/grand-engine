@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 2. Run the basic game:
 ```bash
-source venv/bin/activate && python main.py
+source venv/bin/activate && python3 src/web_server.py
 ```
 
 3. Start Jupyter for prototyping:
