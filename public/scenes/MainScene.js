@@ -17,10 +17,26 @@ export class MainScene extends Phaser.Scene {
         this.hand = [];
         this.cardSprites = [];
         this.messageText = null;
+        this.resources = {
+            money: 100,
+            water: 0,
+            steam: 0,
+            energy: 0,
+            ore: 0,
+            crystal: 0
+        };
+        this.resourceText = null;
     }
 
     create() {
         this.dealHand();
+
+        this.resourceText = this.add.text(20, 20, '', {
+            font: '22px Arial',
+            fill: '#fff'
+        }).setOrigin(0, 0);
+
+        this.updateResourceText();
 
         this.messageText = this.add.text(400, 100, '', {
             font: '28px Arial',
@@ -28,6 +44,13 @@ export class MainScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.renderHand();
+    }
+
+    updateResourceText() {
+        const { money, water, steam, energy, ore, crystal } = this.resources;
+        this.resourceText.setText(
+            `💰 $${money}   💧 ${water}   ♨️ ${steam}   ⚡ ${energy}   ⛏️ ${ore}   💎 ${crystal}`
+        );
     }
 
     dealHand() {
@@ -66,7 +89,37 @@ export class MainScene extends Phaser.Scene {
     playCard(cardIndex) {
         const card = this.hand[cardIndex];
         this.messageText.setText(`Played: ${card.name}`);
+        // Example: update resources based on card played
+        if (card.name === "Extract Water") {
+            this.resources.money -= 10;
+            this.resources.water += 3;
+        } else if (card.name === "Boil Water") {
+            if (this.resources.water >= 2) {
+                this.resources.water -= 2;
+                this.resources.steam += 1;
+            }
+        } else if (card.name === "Generate Energy") {
+            if (this.resources.steam >= 1) {
+                this.resources.steam -= 1;
+                this.resources.energy += 2;
+            }
+        } else if (card.name === "Mine Ore") {
+            this.resources.money -= 15;
+            this.resources.ore += 2;
+        } else if (card.name === "Refine Crystals") {
+            if (this.resources.ore >= 1 && this.resources.energy >= 1) {
+                this.resources.ore -= 1;
+                this.resources.energy -= 1;
+                this.resources.crystal += 1;
+            }
+        } else if (card.name === "Sell Crystals") {
+            if (this.resources.crystal >= 1) {
+                this.resources.crystal -= 1;
+                this.resources.money += 40;
+            }
+        }
         this.hand.splice(cardIndex, 1);
+        this.updateResourceText();
         this.renderHand();
     }
 }
