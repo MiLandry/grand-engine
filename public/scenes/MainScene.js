@@ -8,7 +8,8 @@ const CARD_TYPES = [
     { name: "Generate Energy", color: 0x81c784 },
     { name: "Mine Ore", color: 0xa1887f },
     { name: "Refine Crystals", color: 0xba68c8 },
-    { name: "Sell Crystals", color: 0xff8a65 }
+    { name: "Sell Crystals", color: 0xff8a65 },
+    { name: "Run Core Engine", color: 0xFFD700 } // New special card
 ];
 
 export class MainScene extends Phaser.Scene {
@@ -54,11 +55,10 @@ export class MainScene extends Phaser.Scene {
     }
 
     dealHand() {
-        this.hand = [];
-        for (let i = 0; i < 5; i++) {
-            const card = Phaser.Utils.Array.GetRandom(CARD_TYPES);
-            this.hand.push(card);
-        }
+        // Make a shallow copy and shuffle
+        const shuffled = Phaser.Utils.Array.Shuffle([...CARD_TYPES]);
+        // Take all 6 cards (one of each type)
+        this.hand = shuffled.slice(0, 6);
     }
 
     renderHand() {
@@ -117,6 +117,11 @@ export class MainScene extends Phaser.Scene {
                 this.resources.crystal -= 1;
                 this.resources.money += 40;
             }
+        } else if (card.name === "Run Core Engine") {
+            // Special effect: redraw hand and gain 1 energy
+            this.dealHand();
+            this.resources.energy += 1;
+            this.messageText.setText("Core Engine activated! New hand +1 ⚡");
         }
         this.hand.splice(cardIndex, 1);
         this.updateResourceText();
